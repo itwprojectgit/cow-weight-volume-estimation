@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary runtime logs
+*.log
+
+# Raw heavy point clouds (app uses refined aligned_output/cow_*_clean.ply)
+data/AlignedClouds/
+data/LeftClouds/
+data/RightClouds/
+data/TopClouds/
+aligned_output/*_merged.ply
