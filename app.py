@@ -47,6 +47,15 @@ def get_cached_volume(clean_ply_path_str: str):
 def get_cached_measurements(clean_ply_path_str: str):
     return extract_measurements_from_3d(Path(clean_ply_path_str))
 
+@st.cache_resource
+def get_rembg_session():
+    import rembg
+    return rembg.new_session("u2net")
+
+@st.cache_resource
+def get_weight_model(model_path_str: str):
+    return joblib.load(model_path_str)
+
 @st.cache_data
 def get_ply_bytes(ply_path_str: str) -> bytes:
     with open(ply_path_str, "rb") as f:
@@ -750,8 +759,8 @@ with tab_main:
                     st.stop()
 
                 with st.spinner("Processing custom segmentation, 3D projection, and biometric estimation..."):
-                    import rembg
-                    session = rembg.new_session("u2net")
+                    session = get_rembg_session()
+                    saved_model = get_weight_model(str(MODEL_PATH))
                     clouds = {}
                     for v in ["Top", "Left", "Right"]:
                         pcd_v, rgb_reg, mask_v, seg_rgb = segment_view_rgbd(active_rgb[v], active_depth[v], session, fx=p_fx, fy=p_fy, cx=p_cx, cy=p_cy)
@@ -766,7 +775,9 @@ with tab_main:
 
                     vol_data = compute_sliced_hull_volume(custom_clean, step_m=0.02)
                     meas_3d = extract_measurements_from_3d(custom_clean)
-                    pred_wt, feature_cols = predict_weight(meas_3d, MODEL_PATH)
+                    feature_cols = saved_model["feature_cols"]
+                    x_feat = np.array([[meas_3d[c] for c in feature_cols]])
+                    pred_wt = float(saved_model["model"].predict(x_feat)[0])
 
                     pts = np.asarray(clean_pcd.points)
                     st.session_state.custom_results = {
